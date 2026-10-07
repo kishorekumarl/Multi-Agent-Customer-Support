@@ -1,0 +1,12 @@
+# Direct dependencies, pinned to the versions the test suite was run against.
+langgraph==1.2.12
+langgraph-supervisor==0.0.31
+langchain==1.4.3
+langchain-core==1.6.5
+langchain-openai==1.6.6
+sqlalchemy==2.1.1
+pydantic==2.13.5
+gradio==6.28.0
+python-dotenv==1.2.3
+pytest==9.1.1
+pytest-cov==7.1.0

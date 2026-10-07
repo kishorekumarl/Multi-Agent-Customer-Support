@@ -1,0 +1,27 @@
+# Secrets and local environment: never copy into the image
+.env
+.venv/
+venv/
+
+# Not needed at run time
+tests/
+notebooks/
+docs/
+scripts/
+data/
+logs/
+.github/
+README.md
+.pytest_cache/
+.coverage
+htmlcov/
+.vscode/
+.idea/
+.DS_Store
+.git/
+
+# Build and cache artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.db
