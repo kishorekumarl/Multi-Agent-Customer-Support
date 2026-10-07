@@ -1,10 +1,27 @@
 # Multi-Agent Customer Support — Digital Music Store
 
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![LangGraph](https://img.shields.io/badge/built%20with-LangGraph-orange)
+
 A chat assistant for a digital music store, built with LangGraph. A customer first proves who
 they are (Customer ID, email or phone). After that, a **supervisor** routes each question to a
 **music catalog agent** or an **invoice agent**, both of which answer only from a real database
 (the Chinook sample store). The assistant also **remembers each customer's music tastes** across
 conversations.
+
+## Quick Start
+
+```bash
+git clone <repo-url> && cd Multi-Agent-Customer-Support
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env    # add your OPENAI_API_KEY
+python app.py           # open http://127.0.0.1:7860
+```
+
+Needs an OpenAI API key (usage is billed by OpenAI); set `OPENAI_API_BASE` to use another
+OpenAI-compatible provider. Full details are in [Setup](#setup).
 
 ## Features
 
@@ -28,7 +45,7 @@ conversations.
 
 ## Architecture
 
-```
+```text
 START
   │
   ▼
@@ -70,7 +87,7 @@ flowchart TD
 ```
 
 | Piece | Where | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Graph wiring | `src/graph/builder.py` | `build_graph(checkpointer, store, agent_llm)` |
 | State | `src/graph/state.py` | `messages`, `customer_id`, `memory` |
 | Prompts | `src/graph/prompts.py` | extraction, fallback, agents, supervisor, memory |
@@ -87,7 +104,7 @@ across conversations.
 ## Tech Stack
 
 | Component | Choice |
-|---|---|
+| --- | --- |
 | Language | Python 3.12 |
 | Agents | LangGraph, `langgraph-supervisor`, LangChain (`langchain-openai`) |
 | Database | SQLite (in-memory Chinook sample) via SQLAlchemy |
@@ -100,6 +117,7 @@ across conversations.
 Requires Python 3.12+ and an OpenAI API key.
 
 ```bash
+git clone <repo-url>
 cd Multi-Agent-Customer-Support
 python3.12 -m venv .venv
 source .venv/bin/activate
@@ -113,7 +131,7 @@ cp .env.example .env        # then put your key in .env
 Set these in `.env` (see `.env.example`).
 
 | Variable | Required | Default | Purpose |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `OPENAI_API_KEY` | **yes** | — | OpenAI API key |
 | `MODEL_NAME` | no | `gpt-4o` | Chat model |
 | `TEMPERATURE` | no | `0.0` | Sampling temperature |
@@ -121,7 +139,7 @@ Set these in `.env` (see `.env.example`).
 | `PORT` | no | `7860` | Web app port (`APP_PORT` also works) |
 | `DATABASE_URL` | no | `sqlite:///:memory:` | Database (seeded at startup) |
 | `LOG_LEVEL` | no | `INFO` | Logging level |
-| `LOG_TOOL_PAYLOADS` | no | `true` | Log every tool's request and full JSON response (set `false` outside local dev; responses can contain customer data) |
+| `LOG_TOOL_PAYLOADS` | no | `true` | Log every tool's request and full JSON response (**set `false` outside local dev**; logs can contain customer data) |
 
 Never commit `.env`. It is git-ignored and docker-ignored.
 
@@ -163,7 +181,7 @@ pytest --cov=src                        # with coverage
 Customer 1 in the sample data is reachable by ID `1`, email `luisg@embraer.com.br`, or by the
 phone number on file. The replies below are abbreviated; exact wording varies with the model.
 
-```
+```text
 You:        hi
 Assistant:  Sorry, I wasn't able to match that to an account. To verify your identity, please
             share your Customer ID, the email on your account, or your phone number.   [waiting]
@@ -186,7 +204,7 @@ preferences stay with the customer and are loaded again once they verify.
 
 ## Project Structure
 
-```
+```text
 app.py                  # entry point: python app.py
 Dockerfile, .dockerignore, .env.example, requirements.txt
 src/
@@ -212,3 +230,10 @@ tests/                  # unit tests and shared fixtures
 - **Behavior depends on the model.** Routing and grounding are enforced by prompts and by tool
   design (scoped IDs, ownership checks), and checked by tests with scripted models plus manual
   runs against the real model.
+
+## License and Credits
+
+Released under the [MIT License](LICENSE).
+
+Sample data comes from the [Chinook database](https://github.com/lerocha/chinook-database) by
+Luis Rocha, used under its upstream license.
