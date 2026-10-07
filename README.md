@@ -49,6 +49,26 @@ create_memory        extracts new preferences from the last ~10 messages → sto
 END
 ```
 
+The same flow as a rendered diagram:
+
+```mermaid
+flowchart TD
+    START([START]) --> verify[verify_info]
+    verify -- no customer_id --> human[human_input<br/>interrupt: ask for identifier]
+    human -- customer replies --> verify
+    verify -- customer_id set --> load[load_memory<br/>read preferences from store]
+    load --> sup{supervisor}
+    sup -- music --> music[music_catalog_agent<br/>5 catalog tools]
+    sup -- billing --> inv[invoice_agent<br/>4 customer-scoped tools]
+    sup -- off-topic --> decline[decline politely]
+    music --> mem[create_memory<br/>save new preferences]
+    inv --> mem
+    decline --> mem
+    mem --> END([END])
+    store[(InMemoryStore<br/>per-customer preferences)] -.-> load
+    mem -.-> store
+```
+
 | Piece | Where | Notes |
 |---|---|---|
 | Graph wiring | `src/graph/builder.py` | `build_graph(checkpointer, store, agent_llm)` |
@@ -80,7 +100,7 @@ across conversations.
 Requires Python 3.12+ and an OpenAI API key.
 
 ```bash
-cd "Multi-Agent Customer Support"
+cd Multi-Agent-Customer-Support
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
