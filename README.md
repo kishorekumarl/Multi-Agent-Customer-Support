@@ -19,35 +19,26 @@ A digital music store sells tracks, albums, and other media from hundreds of art
 
 Currently, customer support is handled manually, requiring customers to contact support by email or phone to get answers to common questions, such as:
 
-"What rock albums are available in the catalog?"
-"Do you have any songs by AC/DC?"
-"What items were included in my most recent invoice?"
-"Who is my assigned support representative?"
-"How much have I spent in total?"
+- "What rock albums are available in the catalog?"
+- "Do you have any songs by AC/DC?"
+- "What items were included in my most recent invoice?"
+- "Who is my assigned support representative?"
+- "How much have I spent in total?"
 
 The manual support process makes it time-consuming for customers to retrieve information about the music catalog, their invoices, and their account details.
 
 ### Why it is hard
 
-These questions involve different types of operations, and a naive implementation can lead to inaccurate answers or security risks.
+These questions involve different types of operations, and a naive implementation can lead to
+inaccurate answers or security risks.
 
-- **Catalog questions** (Questions about rock albums or AC/DC songs require searching the music catalog efficiently and handling large result sets without overwhelming the user.)
-- **Account questions** (Questions about invoices, total spending, and support representatives involve private customer data. The assistant must verify the customer's identity and ensure that customers can access only their own information)
+- **Catalog questions.** Questions about rock albums or AC/DC songs require searching the music
+  catalog efficiently and handling large result sets without overwhelming the user.
+- **Account questions.** Questions about invoices, total spending and support representatives
+  involve private customer data. The assistant must verify the customer's identity and ensure
+  that customers can access only their own information.
 - **Accuracy matters.** Prices, invoice line items, and spending totals must be accurate. Relying on an LLM's generated responses alone can lead to fabricated or incorrect information.
 - **Scope matters.** The assistant must recognize which questions are relevant to the music store and gracefully decline unrelated requests rather than generating unsupported answers.
-
-### What this project does
-
-It replaces the manual process with a multi-agent assistant:
-
-1. **Verifies identity first** (Customer ID, email or phone) before any account question.
-2. **Routes each question** to a music catalog agent or an invoice agent, so each one has a
-   small, focused set of tools.
-3. **Answers only from the database**, with exact numbers and an honest "I couldn't find that"
-   when a lookup fails.
-4. **Scopes private data by design.** The verified customer ID comes from graph state, not from
-   the model, so a customer can only reach their own invoices.
-5. **Remembers music tastes** across conversations to personalize suggestions.
 
 ## Quick Start
 
@@ -60,7 +51,9 @@ python app.py           # open http://127.0.0.1:7860
 ```
 
 Needs an OpenAI API key (usage is billed by OpenAI); set `OPENAI_API_BASE` to use another
-OpenAI-compatible provider. Full details are in [Setup](#setup).
+OpenAI-compatible provider. The database is built in memory from
+`src/database/seed_data/Chinook_Sqlite.sql` on first use, so there is nothing else to set up.
+See [Configuration](#configuration-and-docker) for all settings.
 
 ## Features
 
@@ -69,10 +62,9 @@ OpenAI-compatible provider. Full details are in [Setup](#setup).
   and asks again, then resumes with the customer's reply.
 - **Secure customer ID.** The verified ID is stored in graph state and shown to agents in a
   `SystemMessage`. The invoice tools read it from state, so the model never supplies or sees a
-  customer ID parameter, and a customer can only ever reach their own invoices.
-- **Supervisor routing.** Music questions go to the music agent, billing questions to the
-  invoice agent, mixed questions to the invoice agent first and then the music agent, and
-  off-topic questions are declined without calling either.
+  customer ID tool parameter, and a customer can only ever reach their own invoices.
+- **Supervisor routing.** Music, billing, mixed and off-topic questions each take a different
+  path (see the flow below).
 - **Grounded answers.** Every prompt carries six rules: tool-only responses, exact numbers,
   honest failures, scope boundaries, no memory-based answers, and truncation transparency
   ("showing 5 of 1,309").
@@ -84,9 +76,8 @@ OpenAI-compatible provider. Full details are in [Setup](#setup).
 
 ## Architecture
 
-The app is a **LangGraph state machine**. The graph first identifies the customer, then routes
-each question to a specialist agent, and finally saves any new preferences. Every answer comes
-from the database (the Chinook sample store), not from model memory.
+The app is a **LangGraph state machine**: identify the customer, route to a specialist agent,
+then save new preferences.
 
 ### How a turn flows
 
@@ -132,16 +123,12 @@ flowchart TD
 | Memory store | `src/graph/memory_store.py` | namespace `("memory_profile", customer_id)`, key `user_memory` |
 | UI | `src/ui/` and `app.py` | Gradio Blocks; logic in `chat.py` is testable without a browser |
 
-### Key design ideas
-
-| Idea | How it works |
-| --- | --- |
-| Secure customer ID | The ID lives in graph state. Invoice tools read it from state, so the model never supplies or sees an ID parameter and a customer can only reach their own data. |
-| Grounded answers | Prompts enforce six rules: tool-only answers, exact numbers, honest failures, scope limits, no answers from memory, and truncation transparency. |
-| Two kinds of memory | The **checkpointer** (`MemorySaver`) keeps one conversation's history, scoped by thread ID. The **store** (`InMemoryStore`) keeps each customer's preferences across conversations. |
-| Verify once | Verification happens once per conversation, so later messages cannot switch to another customer. |
-
 See [Design Notes and Limitations](#design-notes-and-limitations) for what the demo does not cover.
+
+### Two kinds of memory
+
+The **checkpointer** (`MemorySaver`) keeps one conversation's history, scoped by thread ID. The
+**store** (`InMemoryStore`) keeps each customer's preferences across conversations.
 
 ## Tech Stack
 
@@ -154,21 +141,9 @@ See [Design Notes and Limitations](#design-notes-and-limitations) for what the d
 | UI | Gradio |
 | Tests | pytest |
 
-## Setup
+## Configuration and Docker
 
 Requires Python 3.12+ and an OpenAI API key.
-
-```bash
-git clone <repo-url>
-cd Multi-Agent-Customer-Support
-python3.12 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-cp .env.example .env        # then put your key in .env
-```
-
-### Environment variables
 
 Set these in `.env` (see `.env.example`).
 
@@ -184,15 +159,6 @@ Set these in `.env` (see `.env.example`).
 | `LOG_TOOL_PAYLOADS` | no | `true` | Log every tool's request and full JSON response (**set `false` outside local dev**; logs can contain customer data) |
 
 Never commit `.env`. It is git-ignored and docker-ignored.
-
-## Run
-
-```bash
-python app.py
-```
-
-Open <http://127.0.0.1:7860>. The database is built in memory from
-`src/database/seed_data/Chinook_Sqlite.sql` on first use, so there is nothing else to set up.
 
 ### Docker
 
@@ -210,13 +176,8 @@ The key is passed at run time and is not stored in the image. If you change `POR
 pytest tests/ -v
 ```
 
-Tests use scripted fake models, so they need no API key and make no network calls:
-
-```bash
-pytest tests/unit/test_graph.py -v      # graph, interrupt/resume, memory wiring
-pytest tests/unit/test_agents.py -v     # prompts, music loop, supervisor routing
-pytest --cov=src                        # with coverage
-```
+Tests use scripted fake models, so they need no API key and make no network calls. Add
+`--cov=src` for coverage.
 
 ## Sample Usage
 
