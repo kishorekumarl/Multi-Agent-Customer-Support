@@ -13,7 +13,7 @@ class Settings:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_api_base: str = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
     model_name: str = os.getenv("MODEL_NAME", "gpt-4o")
-    temperature: float = float(os.getenv("TEMPERATURE", "0.3"))
+    temperature: float = float(os.getenv("TEMPERATURE", "0.0"))
     
     
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///:memory:")

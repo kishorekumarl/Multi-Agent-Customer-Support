@@ -55,6 +55,12 @@ OpenAI-compatible provider. The database is built in memory from
 `src/database/seed_data/Chinook_Sqlite.sql` on first use, so there is nothing else to set up.
 See [Configuration](#configuration-and-docker) for all settings.
 
+## Documentation
+
+- [Getting Started](docs/getting-started.md): install, run, Docker, other providers, first chat.
+- [Architecture](docs/architecture.md): flowcharts, one turn in sequence, file-by-file map.
+- [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Features
 
 - **Identity verification with human-in-the-loop.** An LLM extracts one identifier from the
