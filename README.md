@@ -208,18 +208,30 @@ preferences stay with the customer and are loaded again once they verify.
 ## Project Structure
 
 ```text
-app.py                  # entry point: python app.py
+app.py                          # entry point: python app.py
 Dockerfile, .dockerignore, .env.example, requirements.txt
+LICENSE, SECURITY.md, CONTRIBUTING.md
 src/
-├── agents/             # music agent, invoice agent (+ scoped tools), supervisor
-├── config/             # settings loaded from .env
-├── database/           # connection, health check, Chinook seed SQL
-├── graph/              # state, prompts, nodes, memory store, graph builder
-├── schemas/            # Pydantic models: UserInput, UserProfile
-├── tools/              # DB-backed tools, input validation helpers
-├── ui/                 # Gradio app and chat logic
-└── utils/              # logger, phone normalization
-tests/                  # unit tests and shared fixtures
+├── agents/
+│   ├── music_agent.py          # hand-built ReAct loop
+│   ├── invoice_agent.py        # create_react_agent
+│   ├── invoice_tools.py        # customer-scoped invoice tools (ID read from state)
+│   └── supervisor.py           # routing
+├── config/settings.py          # settings loaded from .env
+├── database/
+│   ├── connection.py, health.py
+│   └── seed_data/              # Chinook_Sqlite.sql and seed.py
+├── graph/
+│   ├── builder.py, state.py, prompts.py, memory_store.py
+│   └── nodes/                  # verify_identity, human_input, load_memory, create_memory
+├── schemas/                    # Pydantic models: UserInput, UserProfile
+├── tools/                      # music_catalog, invoices, customer_lookup, sql_query, _common
+├── ui/                         # app.py (Gradio Blocks) and chat.py (chat logic)
+└── utils/                      # logger, phone normalization
+tests/
+├── conftest.py                 # shared fixtures
+├── unit/                       # graph, agents, nodes, tools, chat (scripted fake models)
+└── test_*.py                   # health, phone, sql_query
 ```
 
 ## Design Notes and Limitations
