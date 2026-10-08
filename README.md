@@ -45,28 +45,24 @@ OpenAI-compatible provider. Full details are in [Setup](#setup).
 
 ## Architecture
 
-```text
-START
-  │
-  ▼
-verify_info ──(no customer_id yet)──▶ human_input ──┐   interrupt(): ask for an identifier,
-  │  ▲                                              │   resume with the customer's reply
-  │  └──────────────────────────────────────────────┘
-  │ (customer_id set)
-  ▼
-load_memory          reads saved preferences from the store → state["memory"]
-  │
-  ▼
-supervisor ─────────▶ music_catalog_agent   (hand-built ReAct loop, 5 catalog tools)
-  │          └──────▶ invoice_agent         (create_react_agent, 4 customer-scoped tools)
-  ▼
-create_memory        extracts new preferences from the last ~10 messages → store
-  │
-  ▼
-END
-```
+The app is a **LangGraph state machine**. The graph first identifies the customer, then routes
+each question to a specialist agent, and finally saves any new preferences. Every answer comes
+from the database (the Chinook sample store), not from model memory.
 
-The same flow as a rendered diagram:
+### How a turn flows
+
+1. **`verify_info`** — an LLM extracts one identifier (Customer ID, email or phone) from the
+   message and the database confirms it. On a match, the customer ID is stored in graph state.
+2. **`human_input`** — if there is no match, the graph pauses with `interrupt()`, asks again,
+   and loops back to `verify_info` with the customer's reply.
+3. **`load_memory`** — reads the customer's saved music tastes into `state["memory"]`.
+4. **`supervisor`** — routes the question: music to the music agent, billing to the invoice
+   agent, mixed questions to the invoice agent first and then the music agent, and off-topic
+   questions are declined without calling an agent.
+5. **Specialist agents** — the music agent is a hand-built ReAct loop with 5 catalog tools; the
+   invoice agent uses `create_react_agent` with 4 customer-scoped tools.
+6. **`create_memory`** — extracts newly stated preferences ("I love jazz") from the last ~10
+   messages and merges them into the store with a set-union. Questions are not saved.
 
 ```mermaid
 flowchart TD
@@ -97,9 +93,16 @@ flowchart TD
 | Memory store | `src/graph/memory_store.py` | namespace `("memory_profile", customer_id)`, key `user_memory` |
 | UI | `src/ui/` and `app.py` | Gradio Blocks; logic in `chat.py` is testable without a browser |
 
-Two stores do different jobs. The **checkpointer** (`MemorySaver`) keeps one conversation's
-history, scoped by thread ID. The **store** (`InMemoryStore`) keeps each customer's preferences
-across conversations.
+### Key design ideas
+
+| Idea | How it works |
+| --- | --- |
+| Secure customer ID | The ID lives in graph state. Invoice tools read it from state, so the model never supplies or sees an ID parameter and a customer can only reach their own data. |
+| Grounded answers | Prompts enforce six rules: tool-only answers, exact numbers, honest failures, scope limits, no answers from memory, and truncation transparency. |
+| Two kinds of memory | The **checkpointer** (`MemorySaver`) keeps one conversation's history, scoped by thread ID. The **store** (`InMemoryStore`) keeps each customer's preferences across conversations. |
+| Verify once | Verification happens once per conversation, so later messages cannot switch to another customer. |
+
+See [Design Notes and Limitations](#design-notes-and-limitations) for what the demo does not cover.
 
 ## Tech Stack
 
