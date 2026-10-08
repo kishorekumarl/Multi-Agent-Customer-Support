@@ -3,12 +3,51 @@
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![LangGraph](https://img.shields.io/badge/built%20with-LangGraph-orange)
+[![UI: Gradio](https://img.shields.io/badge/UI-Gradio-orange.svg)](https://gradio.app)
+
+## What This Is
 
 A chat assistant for a digital music store, built with LangGraph. A customer first proves who
 they are (Customer ID, email or phone). After that, a **supervisor** routes each question to a
 **music catalog agent** or an **invoice agent**, both of which answer only from a real database
 (the Chinook sample store). The assistant also **remembers each customer's music tastes** across
 conversations.
+
+## Problem Statement
+
+A digital music store sells tracks, albums, and other media from hundreds of artists across multiple genres.
+
+Currently, customer support is handled manually, requiring customers to contact support by email or phone to get answers to common questions, such as:
+
+"What rock albums are available in the catalog?"
+"Do you have any songs by AC/DC?"
+"What items were included in my most recent invoice?"
+"Who is my assigned support representative?"
+"How much have I spent in total?"
+
+The manual support process makes it time-consuming for customers to retrieve information about the music catalog, their invoices, and their account details.
+
+### Why it is hard
+
+These questions involve different types of operations, and a naive implementation can lead to inaccurate answers or security risks.
+
+- **Catalog questions** (Questions about rock albums or AC/DC songs require searching the music catalog efficiently and handling large result sets without overwhelming the user.)
+- **Account questions** (Questions about invoices, total spending, and support representatives involve private customer data. The assistant must verify the customer's identity and ensure that customers can access only their own information)
+- **Accuracy matters.** Prices, invoice line items, and spending totals must be accurate. Relying on an LLM's generated responses alone can lead to fabricated or incorrect information.
+- **Scope matters.** The assistant must recognize which questions are relevant to the music store and gracefully decline unrelated requests rather than generating unsupported answers.
+
+### What this project does
+
+It replaces the manual process with a multi-agent assistant:
+
+1. **Verifies identity first** (Customer ID, email or phone) before any account question.
+2. **Routes each question** to a music catalog agent or an invoice agent, so each one has a
+   small, focused set of tools.
+3. **Answers only from the database**, with exact numbers and an honest "I couldn't find that"
+   when a lookup fails.
+4. **Scopes private data by design.** The verified customer ID comes from graph state, not from
+   the model, so a customer can only reach their own invoices.
+5. **Remembers music tastes** across conversations to personalize suggestions.
 
 ## Quick Start
 
