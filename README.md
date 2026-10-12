@@ -43,7 +43,7 @@ inaccurate answers or security risks.
 ## Quick Start
 
 ```bash
-git clone <repo-url> && cd Multi-Agent-Customer-Support
+git clone https://github.com/kishorekumarl/Multi-Agent-Customer-Support.git && cd Multi-Agent-Customer-Support
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env    # add your OPENAI_API_KEY

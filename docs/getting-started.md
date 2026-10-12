@@ -14,7 +14,7 @@ environment or Docker.
 ## Option A: Python virtual environment
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/kishorekumarl/Multi-Agent-Customer-Support.git
 cd Multi-Agent-Customer-Support
 
 python3.12 -m venv .venv
@@ -37,7 +37,7 @@ exits with a message telling you to create `.env`.
 ## Option B: Docker
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/kishorekumarl/Multi-Agent-Customer-Support.git
 cd Multi-Agent-Customer-Support
 
 cp .env.example .env                 # then set OPENAI_API_KEY in .env
