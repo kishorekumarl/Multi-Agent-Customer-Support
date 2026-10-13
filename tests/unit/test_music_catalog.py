@@ -115,6 +115,17 @@ def test_songs_by_genre_fewer_artists_than_limit():
     assert len(set(artists)) == len(artists)
 
 
+@pytest.mark.parametrize("phrase", ["Rock albums", "rock album", "Rock songs", "rock music", "Rock, albums"])
+def test_songs_by_genre_ignores_trailing_album_or_song_words(phrase):
+    data = call(music_catalog.get_songs_by_genre, genre=phrase)
+    assert data["total"] == call(music_catalog.get_songs_by_genre, genre="Rock")["total"]
+    assert data["results"]
+
+
+def test_songs_by_genre_only_a_filler_word_is_not_stripped_to_nothing():
+    assert call(music_catalog.get_songs_by_genre, genre="albums")["results"] == []
+
+
 def test_songs_by_genre_no_match_returns_message():
     data = call(music_catalog.get_songs_by_genre, genre="XYZ")
     assert data["message"] == "No songs found for genre: XYZ"

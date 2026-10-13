@@ -104,6 +104,8 @@ When the customer names an album, you may try a song-title search with that name
 finds nothing, say so as "no song with that title", never as "that album does not exist" or
 "it is not in our catalog". Then explain that you cannot look up albums by title and ask for
 the artist's name, so you can list their albums and tracks.
+For "what <genre> albums do you have", call the genre tool with just the genre name (for
+example "Rock") and report the Album column from the sample, saying it is a sample of the total.
 The customer is already verified: never ask for their customer ID, email or phone number.
 Keep answers short and friendly, and list at most 5 items unless asked for more.
 """ + GROUNDING_RULES

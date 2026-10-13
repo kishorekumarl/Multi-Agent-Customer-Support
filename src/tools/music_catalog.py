@@ -1,4 +1,5 @@
 import json
+import re
 
 from langchain_core.tools import tool
 from src.tools._common import _json_errors, _like, _not_found, _parse_id, _query
@@ -15,6 +16,13 @@ _TRACK_COLS = (
 )
 _ESCAPE = "ESCAPE '!'"
 _ALBUM_LIMIT = 50
+
+
+def _genre_name(genre: str) -> str:
+    """Drop a trailing "album(s)", "song(s)", "track(s)" or "music" the model may add
+    ("Rock albums" -> "Rock"), keeping the original text if nothing would be left."""
+    stripped = re.sub(r"(?i)[\s,]+(albums?|songs?|tracks?|music)\s*$", "", (genre or "").strip())
+    return stripped or genre
 
 
 @tool
@@ -59,9 +67,11 @@ def get_tracks_by_artist(artist_name: str) -> str:
 @tool
 @_json_errors
 def get_songs_by_genre(genre: str) -> str:
-    """Browse songs in a genre. Returns "total" (all tracks in the genre) and up to 10
-    tracks, one per artist, as a sample covering a variety of artists. Results are the
+    """Browse songs in a genre. Pass only the genre name, e.g. "Rock" (not "rock albums").
+    Returns "total" (all tracks in the genre) and up to 10 tracks, one per artist, as a
+    sample covering a variety of artists; each track includes its Album. Results are the
     same on every call."""
+    genre = _genre_name(genre)
     rows = _query(
         f"""
         SELECT * FROM (
